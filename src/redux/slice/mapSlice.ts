@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createSelector, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../store';
 
 interface MapState {
@@ -21,16 +21,21 @@ export const mapSlice = createSlice({
       state.board = Array.from({ length: height }, () => Array.from({ length: width }, () => 0));
       state.bombCount = bombCount;
     },
+    updateBoard: (state, action: PayloadAction<number[][]>) => {
+      state.board = action.payload;
+    },
   },
 });
 
-export const { updateSize } = mapSlice.actions;
+export const { updateSize, updateBoard } = mapSlice.actions;
 
 export const selectBoard = (state: RootState) => state.map.board;
 
-export const selectBoardSize = (state: RootState) => ({
-  height: state.map.board.length,
-  width: state.map.board[0].length,
-});
+export const selectBoardSize = createSelector(selectBoard, (board) => ({
+  height: board.length,
+  width: board[0].length,
+}));
+
+export const selectBombCount = (state: RootState) => state.map.bombCount;
 
 export default mapSlice.reducer;
