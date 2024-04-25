@@ -53,6 +53,11 @@ const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
   }
+
+  body {
+    background-color: #0e0e0e;
+    overflow: hidden;
+  }
 `;
 
 export default GlobalStyle;
