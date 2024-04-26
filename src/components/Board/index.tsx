@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { BoardBox, Header, Wrapper } from './styles';
 import { BOARD_STATUS } from '../../lib/constants';
@@ -23,8 +23,12 @@ function Board() {
   const bombCount = useAppSelector(selectBombCount);
   const boardStatus = useAppSelector(selectBoardStatus);
   const isDirty = useAppSelector(selectIsDirty);
-  const [count, setCount] = useState(bombCount);
+  const [count, setCount] = useState(0);
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    setCount(bombCount);
+  }, [bombCount]);
 
   const handleClickCell = (x: number, y: number) => {
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;

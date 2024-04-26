@@ -4,7 +4,7 @@ import { MenuList, MenuItem } from './styles';
 import { LEVEL_SIZE } from '../../lib/constants';
 import { LevelType } from '../../types/level';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { selectGameLevel, updateLevel } from '../../redux/slice/gameSlice';
+import { selectGameLevel, updateGameStatus, updateIsDirty, updateLevel } from '../../redux/slice/gameSlice';
 import { updateSize } from '../../redux/slice/mapSlice';
 import { updateModal } from '../../redux/slice/modalSlice';
 
@@ -28,6 +28,8 @@ function GameMenuList({ isOpen }: Props) {
 
     dispatch(updateLevel(newLevel));
     dispatch(updateSize({ width, height, bombCount }));
+    dispatch(updateIsDirty(false));
+    dispatch(updateGameStatus('READY'));
   };
 
   return (

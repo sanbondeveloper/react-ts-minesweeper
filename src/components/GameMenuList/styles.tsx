@@ -2,9 +2,11 @@ import styled from 'styled-components';
 
 export const MenuList = styled.ul<{ $isOpen: boolean }>`
   position: absolute;
+  z-index: 100;
   display: ${(props) => (props.$isOpen ? 'block' : 'none')};
   background-color: #fff;
-  padding: 0 3px;
+  padding: 10px 3px;
+  border: 1px solid #000;
 `;
 
 export const MenuItem = styled.li`
