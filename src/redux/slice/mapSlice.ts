@@ -4,11 +4,13 @@ import type { RootState } from '../store';
 interface MapState {
   board: number[][];
   bombCount: number;
+  boardStatus: number[][];
 }
 
 const initialState: MapState = {
   board: Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => 0)),
   bombCount: 10,
+  boardStatus: Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => 1)),
 };
 
 export const mapSlice = createSlice({
@@ -20,14 +22,18 @@ export const mapSlice = createSlice({
 
       state.board = Array.from({ length: height }, () => Array.from({ length: width }, () => 0));
       state.bombCount = bombCount;
+      state.boardStatus = Array.from({ length: height }, () => Array.from({ length: width }, () => 1));
     },
     updateBoard: (state, action: PayloadAction<number[][]>) => {
       state.board = action.payload;
     },
+    updateBoardStatus: (state, action: PayloadAction<number[][]>) => {
+      state.boardStatus = action.payload;
+    },
   },
 });
 
-export const { updateSize, updateBoard } = mapSlice.actions;
+export const { updateSize, updateBoard, updateBoardStatus } = mapSlice.actions;
 
 export const selectBoard = (state: RootState) => state.map.board;
 
@@ -37,5 +43,7 @@ export const selectBoardSize = createSelector(selectBoard, (board) => ({
 }));
 
 export const selectBombCount = (state: RootState) => state.map.bombCount;
+
+export const selectBoardStatus = (state: RootState) => state.map.boardStatus;
 
 export default mapSlice.reducer;
