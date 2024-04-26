@@ -102,3 +102,19 @@ export const openBoard = ({
 
   return result;
 };
+
+export const showBombs = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
+  const N = board.length;
+  const M = board[0].length;
+  const result = [...boardStatus.map((row) => [...row])];
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < M; j++) {
+      if (board[i][j] === -1) {
+        result[i][j] = 0;
+      }
+    }
+  }
+
+  return result;
+};
