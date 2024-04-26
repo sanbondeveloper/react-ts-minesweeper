@@ -56,7 +56,6 @@ const GlobalStyle = createGlobalStyle`
 
   body {
     background-color: #0e0e0e;
-    overflow: hidden;
   }
 `;
 

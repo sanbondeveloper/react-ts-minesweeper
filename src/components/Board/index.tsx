@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { RiEmotionHappyLine } from 'react-icons/ri';
+import { RiEmotionUnhappyLine } from 'react-icons/ri';
+import { TbMoodCrazyHappy } from 'react-icons/tb';
 
-import { BoardBox, Header, Wrapper } from './styles';
+import { BoardBox, Header, RestartButton, Wrapper } from './styles';
 import { BOARD_STATUS } from '../../lib/constants';
 import { checkWin, createBoardWithBombs, openBoard, showBombs } from '../../lib/func';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
@@ -11,6 +14,7 @@ import {
   selectBoardStatus,
   updateBoard,
   updateBoardStatus,
+  updateSize,
 } from '../../redux/slice/mapSlice';
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../../redux/slice/gameSlice';
 import BoardCell from '../BoardCell';
@@ -93,11 +97,25 @@ function Board() {
     dispatch(updateBoardStatus(newBoardStatus));
   };
 
+  const handleRestart = () => {
+    dispatch(updateSize({ width, height, bombCount }));
+    dispatch(updateIsDirty(false));
+    dispatch(updateGameStatus('READY'));
+  };
+
   return (
     <>
       <Header>
         <Counter count={count} />
-        {gameStatus}
+        <RestartButton onClick={handleRestart}>
+          {gameStatus === 'WIN' ? (
+            <TbMoodCrazyHappy style={{ fontSize: '20px' }} />
+          ) : gameStatus === 'LOSE' ? (
+            <RiEmotionUnhappyLine style={{ fontSize: '20px' }} />
+          ) : (
+            <RiEmotionHappyLine style={{ fontSize: '20px' }} />
+          )}
+        </RestartButton>
       </Header>
       <BoardBox $width={width} $height={height}>
         {board.map((row, i) =>
