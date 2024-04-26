@@ -1,6 +1,6 @@
 import { Container, Wrapper } from './styles';
 import { BOARD_STATUS } from '../../lib/constants';
-import { createBoardWithBombs, openBoard, showBombs } from '../../lib/func';
+import { checkWin, createBoardWithBombs, openBoard, showBombs } from '../../lib/func';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   selectBoard,
@@ -23,7 +23,12 @@ function Board() {
   const dispatch = useAppDispatch();
 
   const handleClickCell = (x: number, y: number) => {
-    if (gameStatus !== 'NONE') return;
+    if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
+    if (boardStatus[x][y] === BOARD_STATUS.FLAG) return;
+
+    if (gameStatus === 'READY') {
+      dispatch(updateGameStatus('START'));
+    }
 
     if (!isDirty) {
       const newBoard = createBoardWithBombs({ width, height, bombCount, x, y });
@@ -41,21 +46,38 @@ function Board() {
       newBoardStatus[x][y] = BOARD_STATUS.RED;
 
       dispatch(updateIsDirty(false));
-      dispatch(updateGameStatus('LOSS'));
+      dispatch(updateGameStatus('LOSE'));
       dispatch(updateBoardStatus(newBoardStatus));
 
       return;
     }
 
     const newBoardStatus = openBoard({ board, boardStatus, x, y });
+    const isWin = checkWin({ board, boardStatus: newBoardStatus });
+
     dispatch(updateBoardStatus(newBoardStatus));
+
+    if (isWin) {
+      dispatch(updateGameStatus('WIN'));
+    }
   };
 
-  const handleFlag = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
+  const handleToggleFlag = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
     e.preventDefault();
 
+    if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
+
+    if (gameStatus === 'READY') {
+      dispatch(updateGameStatus('START'));
+    }
+
     const newBoardStatus = [...boardStatus.map((row) => [...row])];
-    newBoardStatus[x][y] = BOARD_STATUS.FLAG;
+
+    if (newBoardStatus[x][y] === BOARD_STATUS.FLAG) {
+      newBoardStatus[x][y] = BOARD_STATUS.CLOSE;
+    } else {
+      newBoardStatus[x][y] = BOARD_STATUS.FLAG;
+    }
 
     dispatch(updateBoardStatus(newBoardStatus));
   };
@@ -66,7 +88,11 @@ function Board() {
       <Container $width={width} $height={height}>
         {board.map((row, i) =>
           row.map((value, j) => (
-            <Wrapper key={`${i}-${j}`} onClick={() => handleClickCell(i, j)} onContextMenu={(e) => handleFlag(e, i, j)}>
+            <Wrapper
+              key={`${i}-${j}`}
+              onClick={() => handleClickCell(i, j)}
+              onContextMenu={(e) => handleToggleFlag(e, i, j)}
+            >
               <BoardCell value={value} status={boardStatus[i][j]} />
             </Wrapper>
           )),

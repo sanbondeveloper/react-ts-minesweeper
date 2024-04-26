@@ -126,3 +126,19 @@ export const showBombs = ({ board, boardStatus }: { board: number[][]; boardStat
 
   return result;
 };
+
+export const checkWin = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
+  const N = board.length;
+  const M = board.length;
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < M; j++) {
+      const status = boardStatus[i][j];
+      if (board[i][j] !== BOARD_STATUS.BOMB && !(status === BOARD_STATUS.OPEN || status === BOARD_STATUS.FLAG)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};

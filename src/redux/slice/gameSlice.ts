@@ -13,7 +13,7 @@ interface GameState {
 const initialState: GameState = {
   level: 'Beginner',
   isDirty: false,
-  gameStatus: 'NONE',
+  gameStatus: 'READY',
 };
 
 export const gameSlice = createSlice({

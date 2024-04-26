@@ -1,1 +1,1 @@
-export type GameStatusType = 'WIN' | 'LOSS' | 'NONE';
+export type GameStatusType = 'READY' | 'START' | 'WIN' | 'LOSE';
