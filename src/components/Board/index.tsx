@@ -1,5 +1,6 @@
 import { Container, Wrapper } from './styles';
-import { createBoardWithBombs, openBoard, showBombs } from '../../utils/func';
+import { BOARD_STATUS } from '../../lib/constants';
+import { createBoardWithBombs, openBoard, showBombs } from '../../lib/func';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   selectBoard,
@@ -11,11 +12,8 @@ import {
 } from '../../redux/slice/mapSlice';
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../../redux/slice/gameSlice';
 import BoardCell from '../BoardCell';
-import { useState } from 'react';
 
 function Board() {
-  const [prevX, setPrevX] = useState(0);
-  const [prevY, setPrevY] = useState(0);
   const gameStatus = useAppSelector(selectGameStatus);
   const board = useAppSelector(selectBoard);
   const { height, width } = useAppSelector(selectBoardSize);
@@ -38,33 +36,43 @@ function Board() {
       return;
     }
 
-    if (board[x][y] === -1) {
+    if (board[x][y] === BOARD_STATUS.BOMB) {
       const newBoardStatus = showBombs({ board, boardStatus });
+      newBoardStatus[x][y] = BOARD_STATUS.RED;
 
       dispatch(updateIsDirty(false));
       dispatch(updateGameStatus('LOSS'));
       dispatch(updateBoardStatus(newBoardStatus));
-      setPrevX(x);
-      setPrevY(y);
 
       return;
     }
+
+    const newBoardStatus = openBoard({ board, boardStatus, x, y });
+    dispatch(updateBoardStatus(newBoardStatus));
+  };
+
+  const handleFlag = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
+    e.preventDefault();
+
+    const newBoardStatus = [...boardStatus.map((row) => [...row])];
+    newBoardStatus[x][y] = BOARD_STATUS.FLAG;
+
+    dispatch(updateBoardStatus(newBoardStatus));
   };
 
   return (
-    <Container $width={width} $height={height}>
-      {board.map((row, i) =>
-        row.map((count, j) => (
-          <Wrapper key={`${i}-${j}`} onClick={() => handleClickCell(i, j)}>
-            <BoardCell
-              show={boardStatus[i][j] === 0}
-              count={count}
-              red={gameStatus === 'LOSS' && prevX === i && prevY === j}
-            />
-          </Wrapper>
-        )),
-      )}
-    </Container>
+    <>
+      {gameStatus}
+      <Container $width={width} $height={height}>
+        {board.map((row, i) =>
+          row.map((value, j) => (
+            <Wrapper key={`${i}-${j}`} onClick={() => handleClickCell(i, j)} onContextMenu={(e) => handleFlag(e, i, j)}>
+              <BoardCell value={value} status={boardStatus[i][j]} />
+            </Wrapper>
+          )),
+        )}
+      </Container>
+    </>
   );
 }
 

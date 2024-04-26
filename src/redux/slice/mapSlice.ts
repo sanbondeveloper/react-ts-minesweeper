@@ -1,5 +1,7 @@
 import { createSlice, createSelector, PayloadAction } from '@reduxjs/toolkit';
+
 import type { RootState } from '../store';
+import { BOARD_STATUS } from '../../lib/constants';
 
 interface MapState {
   board: number[][];
@@ -22,7 +24,7 @@ export const mapSlice = createSlice({
 
       state.board = Array.from({ length: height }, () => Array.from({ length: width }, () => 0));
       state.bombCount = bombCount;
-      state.boardStatus = Array.from({ length: height }, () => Array.from({ length: width }, () => 1));
+      state.boardStatus = Array.from({ length: height }, () => Array.from({ length: width }, () => BOARD_STATUS.CLOSE));
     },
     updateBoard: (state, action: PayloadAction<number[][]>) => {
       state.board = action.payload;

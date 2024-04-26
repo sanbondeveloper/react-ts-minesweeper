@@ -1,17 +1,33 @@
 import { BiSolidBomb } from 'react-icons/bi';
+import { IoIosFlag } from 'react-icons/io';
 
 import { Cell } from './styles';
+import { BOARD_STATUS } from '../../lib/constants';
 
 interface Props {
-  show: boolean;
-  count: number;
-  red: boolean;
+  status: number;
+  value: number;
 }
 
-function BoardCell({ show, count, red }: Props) {
+function BoardCell({ status, value }: Props) {
+  const show = status !== BOARD_STATUS.CLOSE && status !== BOARD_STATUS.FLAG;
+
   return (
-    <Cell $show={show} $red={red}>
-      {show ? count === -1 ? <BiSolidBomb /> : count : ''}
+    <Cell $show={show} $count={value} $status={status}>
+      {(() => {
+        if (status === BOARD_STATUS.FLAG) return <IoIosFlag />;
+        if (!show) return '';
+
+        if (value === BOARD_STATUS.BOMB || status === BOARD_STATUS.NOTBOMB)
+          return (
+            <>
+              <div className="x">X</div>
+              <BiSolidBomb />
+            </>
+          );
+        else if (value === 0) return '';
+        else return value;
+      })()}
     </Cell>
   );
 }

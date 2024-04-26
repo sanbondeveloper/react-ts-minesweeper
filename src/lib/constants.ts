@@ -3,3 +3,12 @@ export const LEVEL_SIZE = {
   Intermediate: [16, 16, 40],
   Expert: [16, 32, 100],
 };
+
+export const BOARD_STATUS = {
+  BOMB: -1,
+  OPEN: 0,
+  CLOSE: 1,
+  FLAG: 2,
+  RED: 3,
+  NOTBOMB: 4,
+};

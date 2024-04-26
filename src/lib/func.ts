@@ -1,3 +1,5 @@
+import { BOARD_STATUS } from './constants';
+
 const dir = [
   [-1, 0],
   [1, 0],
@@ -80,7 +82,9 @@ export const openBoard = ({
   const queue: [x: number, y: number][] = [[i, j]];
   const result = [...boardStatus.map((row) => [...row])];
 
-  result[i][j] = 0;
+  result[i][j] = BOARD_STATUS.OPEN;
+
+  if (board[i][j] !== 0) return result;
 
   while (queue.length > 0) {
     const [x, y] = queue.shift() as [x: number, y: number];
@@ -90,9 +94,9 @@ export const openBoard = ({
       const ny = y + dir[k][1];
 
       if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
-      if (result[nx][ny] === 0 || board[nx][ny] === -1) continue;
+      if (result[nx][ny] === BOARD_STATUS.OPEN || board[nx][ny] === -1) continue;
 
-      result[nx][ny] = 0;
+      result[nx][ny] = BOARD_STATUS.OPEN;
 
       if (board[nx][ny] === 0) {
         queue.push([nx, ny]);
@@ -110,8 +114,12 @@ export const showBombs = ({ board, boardStatus }: { board: number[][]; boardStat
 
   for (let i = 0; i < N; i++) {
     for (let j = 0; j < M; j++) {
-      if (board[i][j] === -1) {
-        result[i][j] = 0;
+      if (board[i][j] === BOARD_STATUS.BOMB && result[i][j] !== BOARD_STATUS.FLAG) {
+        result[i][j] = BOARD_STATUS.OPEN;
+      }
+
+      if (board[i][j] !== BOARD_STATUS.BOMB && result[i][j] === BOARD_STATUS.FLAG) {
+        result[i][j] = BOARD_STATUS.NOTBOMB;
       }
     }
   }

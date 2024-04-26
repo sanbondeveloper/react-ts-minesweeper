@@ -1,7 +1,7 @@
 import { AiOutlineCheck } from 'react-icons/ai';
 
 import { MenuList, MenuItem } from './styles';
-import { LEVEL_SIZE } from '../../utils/data';
+import { LEVEL_SIZE } from '../../lib/constants';
 import { LevelType } from '../../types/level';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { selectGameLevel, updateLevel } from '../../redux/slice/gameSlice';
