@@ -1,4 +1,6 @@
-import { Container, Wrapper } from './styles';
+import { useState } from 'react';
+
+import { BoardBox, Header, Wrapper } from './styles';
 import { BOARD_STATUS } from '../../lib/constants';
 import { checkWin, createBoardWithBombs, openBoard, showBombs } from '../../lib/func';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
@@ -12,6 +14,7 @@ import {
 } from '../../redux/slice/mapSlice';
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../../redux/slice/gameSlice';
 import BoardCell from '../BoardCell';
+import Counter from '../Counter';
 
 function Board() {
   const gameStatus = useAppSelector(selectGameStatus);
@@ -20,6 +23,7 @@ function Board() {
   const bombCount = useAppSelector(selectBombCount);
   const boardStatus = useAppSelector(selectBoardStatus);
   const isDirty = useAppSelector(selectIsDirty);
+  const [count, setCount] = useState(bombCount);
   const dispatch = useAppDispatch();
 
   const handleClickCell = (x: number, y: number) => {
@@ -75,8 +79,11 @@ function Board() {
 
     if (newBoardStatus[x][y] === BOARD_STATUS.FLAG) {
       newBoardStatus[x][y] = BOARD_STATUS.CLOSE;
+
+      setCount(count + 1);
     } else {
       newBoardStatus[x][y] = BOARD_STATUS.FLAG;
+      setCount(count - 1);
     }
 
     dispatch(updateBoardStatus(newBoardStatus));
@@ -84,8 +91,11 @@ function Board() {
 
   return (
     <>
-      {gameStatus}
-      <Container $width={width} $height={height}>
+      <Header>
+        <Counter count={count} />
+        {gameStatus}
+      </Header>
+      <BoardBox $width={width} $height={height}>
         {board.map((row, i) =>
           row.map((value, j) => (
             <Wrapper
@@ -97,7 +107,7 @@ function Board() {
             </Wrapper>
           )),
         )}
-      </Container>
+      </BoardBox>
     </>
   );
 }
