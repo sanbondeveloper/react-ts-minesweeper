@@ -19,6 +19,7 @@ import {
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../../redux/slice/gameSlice';
 import BoardCell from '../BoardCell';
 import Counter from '../Counter';
+import Timer from '../Timer';
 
 function Board() {
   const gameStatus = useAppSelector(selectGameStatus);
@@ -116,7 +117,9 @@ function Board() {
             <RiEmotionHappyLine style={{ fontSize: '20px' }} />
           )}
         </RestartButton>
+        <Timer gameStatus={gameStatus} />
       </Header>
+
       <BoardBox $width={width} $height={height}>
         {board.map((row, i) =>
           row.map((value, j) => (
