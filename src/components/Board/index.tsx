@@ -37,7 +37,7 @@ function Board() {
 
   const handleClickCell = (x: number, y: number) => {
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
-    if (boardStatus[x][y] === BOARD_STATUS.FLAG) return;
+    if (boardStatus[x][y] === BOARD_STATUS.FLAG || boardStatus[x][y] === BOARD_STATUS.OPEN) return;
 
     if (gameStatus === 'READY') {
       dispatch(updateGameStatus('START'));
@@ -79,6 +79,7 @@ function Board() {
     e.preventDefault();
 
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
+    if (boardStatus[x][y] === BOARD_STATUS.OPEN) return;
 
     if (gameStatus === 'READY') {
       dispatch(updateGameStatus('START'));

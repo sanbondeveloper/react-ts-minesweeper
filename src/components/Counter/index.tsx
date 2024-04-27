@@ -20,7 +20,6 @@ function Counter({ count, board, boardStatus }: Props) {
     const isWin = checkWin({ board, boardStatus });
 
     dispatch(updateBoardStatus(newBoardStatus));
-    console.log(newBoardStatus);
 
     if (isWin) {
       dispatch(updateGameStatus('WIN'));
