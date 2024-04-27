@@ -129,16 +129,54 @@ export const showBombs = ({ board, boardStatus }: { board: number[][]; boardStat
 
 export const checkWin = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
   const N = board.length;
-  const M = board.length;
+  const M = board[0].length;
+  let flag = true;
 
   for (let i = 0; i < N; i++) {
     for (let j = 0; j < M; j++) {
       const status = boardStatus[i][j];
-      if (board[i][j] !== BOARD_STATUS.BOMB && !(status === BOARD_STATUS.OPEN || status === BOARD_STATUS.FLAG)) {
+
+      if (board[i][j] === BOARD_STATUS.BOMB && !(status === BOARD_STATUS.FLAG)) {
+        flag = false;
+      }
+    }
+
+    if (!flag) break;
+  }
+
+  if (flag) return true;
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < M; j++) {
+      const status = boardStatus[i][j];
+
+      if (board[i][j] !== BOARD_STATUS.BOMB && !(status === BOARD_STATUS.OPEN)) {
         return false;
       }
     }
   }
 
   return true;
+};
+
+export const showAllBoard = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
+  const N = board.length;
+  const M = board[0].length;
+  const result = [...boardStatus.map((row) => [...row])];
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < M; j++) {
+      const status = boardStatus[i][j];
+
+      if (board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
+        result[i][j] = BOARD_STATUS.RED;
+      }
+
+      if (board[i][j] !== BOARD_STATUS.BOMB && status === BOARD_STATUS.FLAG) {
+        result[i][j] = BOARD_STATUS.NOTBOMB;
+      }
+    }
+  }
+
+  return result;
 };

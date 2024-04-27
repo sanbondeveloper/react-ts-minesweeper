@@ -22,13 +22,13 @@ import Counter from '../Counter';
 import Timer from '../Timer';
 
 function Board() {
+  const [count, setCount] = useState(0);
   const gameStatus = useAppSelector(selectGameStatus);
   const board = useAppSelector(selectBoard);
   const { height, width } = useAppSelector(selectBoardSize);
   const bombCount = useAppSelector(selectBombCount);
   const boardStatus = useAppSelector(selectBoardStatus);
   const isDirty = useAppSelector(selectIsDirty);
-  const [count, setCount] = useState(0);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -102,12 +102,13 @@ function Board() {
     dispatch(updateSize({ width, height, bombCount }));
     dispatch(updateIsDirty(false));
     dispatch(updateGameStatus('READY'));
+    setCount(bombCount);
   };
 
   return (
     <>
       <Header>
-        <Counter count={count} />
+        <Counter count={count} board={board} boardStatus={boardStatus} />
         <RestartButton onClick={handleRestart}>
           {gameStatus === 'WIN' ? (
             <TbMoodCrazyHappy style={{ fontSize: '20px' }} />
