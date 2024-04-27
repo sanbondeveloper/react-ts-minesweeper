@@ -48,6 +48,8 @@ function CustomSetupModal() {
     dispatch(updateSize({ width: w, height: h, bombCount: cnt }));
     dispatch(updateLevel('Custom'));
     dispatch(updateModal(false));
+
+    localStorage.setItem('level', JSON.stringify({ level: 'Custom', width: w, height: h, bombCount: cnt }));
   };
 
   const handleClose = () => {
