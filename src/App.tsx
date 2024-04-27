@@ -1,10 +1,15 @@
 import styled from 'styled-components';
 
+import { useLevelDataFromLocalStorage } from './hooks/useLevelDataFromLocalStorage';
 import Menu from './components/Menu';
-import CustomSetupModal from './components/CustomSetupModal';
 import Board from './components/Board';
+import CustomSetupModal from './components/CustomSetupModal';
 
 function App() {
+  const load = useLevelDataFromLocalStorage();
+
+  if (!load) return null;
+
   return (
     <Container>
       <Wrapper>
