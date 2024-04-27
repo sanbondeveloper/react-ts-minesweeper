@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { DisplayTime } from './styles';
 import { GameStatusType } from '../../types/gameStatus';
@@ -7,7 +7,7 @@ interface Props {
   gameStatus: GameStatusType;
 }
 
-function Timer({ gameStatus }: Props) {
+const Timer = React.memo(function Timer({ gameStatus }: Props) {
   const [seconds, setSeconds] = useState(0);
   const workerRef = useRef<Worker | null>(null);
 
@@ -34,6 +34,6 @@ function Timer({ gameStatus }: Props) {
   }, [gameStatus]);
 
   return <DisplayTime>{`${seconds.toString().padStart(3, '0')}`}</DisplayTime>;
-}
+});
 
 export default Timer;

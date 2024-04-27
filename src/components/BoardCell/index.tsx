@@ -1,3 +1,4 @@
+import React from 'react';
 import { BiSolidBomb } from 'react-icons/bi';
 import { IoIosFlag } from 'react-icons/io';
 
@@ -9,7 +10,7 @@ interface Props {
   value: number;
 }
 
-function BoardCell({ status, value }: Props) {
+const BoardCell = React.memo(function BoardCell({ status, value }: Props) {
   const show = status !== BOARD_STATUS.CLOSE && status !== BOARD_STATUS.FLAG;
 
   return (
@@ -30,6 +31,6 @@ function BoardCell({ status, value }: Props) {
       })()}
     </Cell>
   );
-}
+});
 
 export default BoardCell;

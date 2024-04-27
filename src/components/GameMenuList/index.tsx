@@ -1,8 +1,8 @@
 import { AiOutlineCheck } from 'react-icons/ai';
 
 import { MenuList, MenuItem } from './styles';
-import { LEVEL_SIZE } from '../../lib/constants';
 import { LevelType } from '../../types/level';
+import { LEVEL_SIZE } from '../../lib/constants';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { selectGameLevel, updateGameStatus, updateIsDirty, updateLevel } from '../../redux/slice/gameSlice';
 import { updateSize } from '../../redux/slice/mapSlice';
@@ -37,7 +37,7 @@ function GameMenuList({ isOpen }: Props) {
   return (
     <MenuList $isOpen={isOpen}>
       {Menu_List.map((menu) => (
-        <MenuItem key={menu} onClick={() => handleChangeLevel(menu)}>
+        <MenuItem key={menu} onClick={handleChangeLevel.bind(null, menu)}>
           <div className="ico-check">{level === menu && <AiOutlineCheck />}</div>
           {menu}
         </MenuItem>

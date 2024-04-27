@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Container, MenuButton } from './styles';
 import GameMenuList from '../GameMenuList';
@@ -8,8 +8,9 @@ function Menu() {
 
   useEffect(() => {
     const handleClickOutside = () => {
-      console.log('window click');
-      setIsOpen(false);
+      if (isOpen) {
+        setIsOpen(false);
+      }
     };
 
     window.addEventListener('click', handleClickOutside);
@@ -17,11 +18,10 @@ function Menu() {
     return () => {
       window.removeEventListener('click', handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-
     setIsOpen(!isOpen);
   };
 

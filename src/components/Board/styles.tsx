@@ -21,12 +21,12 @@ export const Wrapper = styled.div`
   align-items: center;
 `;
 
-export const RestartButton = styled.div`
-  border: 1px solid #000;
-  padding: 0px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
-  cursor: pointer;
+export const GameStatus = styled.div`
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 30px;
 `;
