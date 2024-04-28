@@ -1,15 +1,4 @@
-import { BOARD_STATUS } from './constants';
-
-const dir = [
-  [-1, 0],
-  [1, 0],
-  [0, -1],
-  [0, 1],
-  [-1, -1],
-  [-1, 1],
-  [1, -1],
-  [1, 1],
-];
+import { BOARD_STATUS, NEIGHBORS } from './constants';
 
 function shuffleArray(array: number[][]) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -34,7 +23,7 @@ function generateRandomCoordinates(height: number, width: number, exclude: numbe
   return shuffleArray(coordinates);
 }
 
-export const createBoardWithBombs = ({
+export function createBoardWithBombs({
   board,
   bombCount,
   x,
@@ -44,14 +33,14 @@ export const createBoardWithBombs = ({
   bombCount: number;
   x: number;
   y: number;
-}) => {
+}) {
   const height = board.length;
   const width = board[0].length;
   const newBoard = [...board.map((row) => [...row])];
   const bombs: [number, number][] = [];
   const exclude = [[x, y]];
 
-  dir.forEach(([wx, wy]) => {
+  NEIGHBORS.forEach(([wx, wy]) => {
     const nx = x + wx;
     const ny = y + wy;
 
@@ -71,8 +60,8 @@ export const createBoardWithBombs = ({
 
   for (const [x, y] of bombs) {
     for (let k = 0; k < 8; k++) {
-      const nx = x + dir[k][0];
-      const ny = y + dir[k][1];
+      const nx = x + NEIGHBORS[k][0];
+      const ny = y + NEIGHBORS[k][1];
 
       if (nx < 0 || ny < 0 || nx >= height || ny >= width) continue;
       if (newBoard[nx][ny] === -1) continue;
@@ -82,9 +71,9 @@ export const createBoardWithBombs = ({
   }
 
   return newBoard;
-};
+}
 
-export const initOpen = ({
+export function initOpen({
   board,
   boardStatus,
   x: i,
@@ -94,7 +83,7 @@ export const initOpen = ({
   boardStatus: number[][];
   x: number;
   y: number;
-}) => {
+}) {
   const N = board.length;
   const M = board[0].length;
   const queue: [x: number, y: number][] = [[i, j]];
@@ -108,8 +97,8 @@ export const initOpen = ({
     const [x, y] = queue.shift() as [x: number, y: number];
 
     for (let k = 0; k < 8; k++) {
-      const nx = x + dir[k][0];
-      const ny = y + dir[k][1];
+      const nx = x + NEIGHBORS[k][0];
+      const ny = y + NEIGHBORS[k][1];
 
       if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
       if (result[nx][ny] === BOARD_STATUS.OPEN || result[nx][ny] === BOARD_STATUS.FLAG) continue;
@@ -124,4 +113,4 @@ export const initOpen = ({
   }
 
   return result;
-};
+}

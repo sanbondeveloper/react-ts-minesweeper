@@ -1,9 +1,9 @@
 import { BoardBox, GameStatus, Header, Wrapper } from './styles';
-import BoardCell from '../BoardCell';
+import { useMinesweeper } from '../../hooks/useMinesweeper';
 import Counter from '../Counter';
 import Timer from '../Timer';
-import { useMinesweeper } from '../../hooks/useMinesweeper';
 import ResetButton from '../ResetButton';
+import BoardCell from '../BoardCell';
 
 function Board() {
   const {
@@ -13,10 +13,12 @@ function Board() {
     gameStatus,
     width,
     height,
-    handleClickCell,
-    handleToggleFlag,
-    handleReset,
+    handleClick,
+    handleClickRight,
+    handleClickReset,
     handleClickCounter,
+    handleMouseDown,
+    handleMouseUp,
   } = useMinesweeper();
 
   return (
@@ -24,7 +26,7 @@ function Board() {
       <GameStatus>{gameStatus}</GameStatus>
       <Header>
         <Counter remaining={remaining} onClick={handleClickCounter} />
-        <ResetButton gameStatus={gameStatus} onReset={handleReset} />
+        <ResetButton gameStatus={gameStatus} onReset={handleClickReset} />
         <Timer gameStatus={gameStatus} />
       </Header>
 
@@ -33,8 +35,10 @@ function Board() {
           row.map((value, j) => (
             <Wrapper
               key={`${i}-${j}`}
-              onClick={() => handleClickCell(i, j)}
-              onContextMenu={(e) => handleToggleFlag(e, i, j)}
+              onClick={() => handleClick(i, j)}
+              onContextMenu={(e) => handleClickRight(e, i, j)}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
             >
               <BoardCell value={value} status={boardStatus[i][j]} />
             </Wrapper>

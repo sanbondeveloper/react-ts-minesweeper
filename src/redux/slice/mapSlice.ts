@@ -41,6 +41,12 @@ export const mapSlice = createSlice({
 
       newBoardStatus[tx][ty] = BOARD_STATUS.OPEN;
 
+      if (state.boardStatus[tx][ty] === BOARD_STATUS.CLOSE && state.board[tx][ty] !== 0) {
+        state.boardStatus = newBoardStatus;
+
+        return;
+      }
+
       while (queue.length > 0) {
         const [x, y] = queue.shift()!;
 

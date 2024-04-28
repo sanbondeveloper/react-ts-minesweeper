@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { BOARD_STATUS, NEIGHBORS } from '../lib/constants';
-import { createBoardWithBombs, initOpen } from '../lib/func';
+import { createBoardWithBombs, initOpen } from '../lib/utils';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../redux/slice/gameSlice';
 import {
@@ -26,6 +26,8 @@ export function useMinesweeper() {
   const { height, width } = useAppSelector(selectBoardSize);
   const [count, setCount] = useState(0);
   const [isCounterClick, setIsCounterClick] = useState(false);
+  const [clickedLeft, setClickedLeft] = useState(false);
+  const [clickedRight, setClickedRight] = useState(false);
   const dispatch = useAppDispatch();
 
   // 초기 클릭
@@ -39,6 +41,13 @@ export function useMinesweeper() {
   };
 
   const toggleFlagMark = (x: number, y: number) => {
+    if (!isDirty) {
+      const initBoard = createBoardWithBombs({ board, bombCount, x, y });
+
+      dispatch(updateIsDirty(true));
+      dispatch(updateBoard(initBoard));
+    }
+
     dispatch(toggleFlag([x, y]));
 
     setCount(boardStatus[x][y] === BOARD_STATUS.FLAG ? count + 1 : count - 1);
@@ -139,7 +148,6 @@ export function useMinesweeper() {
     setIsCounterClick(false);
   }, [width, height, bombCount, dispatch]);
 
-  // Area Open
   const areaOpen = (x: number, y: number) => {
     const openedCells: [number, number][] = [];
     let isBombAround = false;
@@ -188,15 +196,36 @@ export function useMinesweeper() {
     }
   }, [gameStatus, checkIsOver, showBoard]);
 
-  const handleClickCell = (x: number, y: number) => {
-    if (boardStatus[x][y] === BOARD_STATUS.OPEN) {
-      // TODO: 양쪽 클릭으로 바꾸자
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button === 0) {
+      setClickedLeft(true);
+    } else if (e.button === 2) {
+      setClickedRight(true);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button === 0) {
+      setClickedLeft(false);
+    } else if (e.button === 2) {
+      setClickedRight(false);
+    }
+  };
+
+  const handleClick = (x: number, y: number) => {
+    if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
+
+    if (clickedLeft && clickedRight && boardStatus[x][y] === BOARD_STATUS.OPEN) {
       areaOpen(x, y);
       return;
     }
 
-    if (boardStatus[x][y] === BOARD_STATUS.FLAG || boardStatus[x][y] === BOARD_STATUS.OPEN) return;
-    if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
+    if (boardStatus[x][y] === BOARD_STATUS.OPEN) {
+      areaOpen(x, y);
+      return;
+    }
+
+    if (boardStatus[x][y] === BOARD_STATUS.FLAG) return;
     if (gameStatus === 'READY') dispatch(updateGameStatus('START'));
 
     if (!isDirty) {
@@ -208,7 +237,7 @@ export function useMinesweeper() {
     dispatch(openCell([x, y]));
   };
 
-  const handleToggleFlag = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
+  const handleClickRight = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
     e.preventDefault();
 
     if (boardStatus[x][y] === BOARD_STATUS.OPEN) return;
@@ -218,7 +247,7 @@ export function useMinesweeper() {
     toggleFlagMark(x, y);
   };
 
-  const handleReset = useCallback(() => {
+  const handleClickReset = useCallback(() => {
     reset();
   }, [reset]);
 
@@ -235,9 +264,11 @@ export function useMinesweeper() {
     gameStatus,
     width,
     height,
-    handleClickCell,
-    handleToggleFlag,
-    handleReset,
+    handleClick,
+    handleClickRight,
+    handleClickReset,
     handleClickCounter,
+    handleMouseDown,
+    handleMouseUp,
   };
 }
