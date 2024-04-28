@@ -11,44 +11,62 @@ const dir = [
   [1, 1],
 ];
 
+function shuffleArray(array: number[][]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array;
+}
+
+function generateRandomCoordinates(height: number, width: number, exclude: number[][]) {
+  const coordinates = [];
+
+  for (let i = 0; i < height; i++) {
+    for (let j = 0; j < width; j++) {
+      const index = exclude.findIndex(([x, y]) => x === i && y === j);
+
+      if (index === -1) coordinates.push([i, j]);
+    }
+  }
+
+  return shuffleArray(coordinates);
+}
+
 export const createBoardWithBombs = ({
-  width,
-  height,
+  board,
   bombCount,
   x,
   y,
 }: {
-  width: number;
-  height: number;
+  board: number[][];
   bombCount: number;
   x: number;
   y: number;
 }) => {
-  const board = Array.from({ length: height }, () => Array.from({ length: width }, () => 0));
-  const check: { [key: string]: boolean | undefined } = {};
+  const height = board.length;
+  const width = board[0].length;
+  const newBoard = [...board.map((row) => [...row])];
   const bombs: [number, number][] = [];
+  const exclude = [[x, y]];
 
-  let count = 0;
+  dir.forEach(([wx, wy]) => {
+    const nx = x + wx;
+    const ny = y + wy;
 
-  for (let k = 0; k < 8; k++) {
-    const nx = x + dir[k][0];
-    const ny = y + dir[k][1];
+    if (nx < 0 || ny < 0 || nx >= height || ny >= width) return;
 
-    if (nx < 0 || ny < 0 || nx >= height || ny >= width) continue;
-    check[`${nx}-${ny}`] = true;
-  }
+    exclude.push([nx, ny]);
+  });
 
-  while (count < bombCount) {
-    const randomX = Math.floor(Math.random() * height);
-    const randomY = Math.floor(Math.random() * width);
+  const randomCoordinates = generateRandomCoordinates(height, width, exclude);
 
-    if (randomX === x && randomY === y) continue;
-    if (check[`${randomX}-${randomY}`]) continue;
+  for (let i = 0; i < bombCount; i++) {
+    const [x, y] = randomCoordinates[i];
 
-    check[`${randomX}-${randomY}`] = true;
-    bombs.push([randomX, randomY]);
-    board[randomX][randomY] = -1;
-    count += 1;
+    newBoard[x][y] = BOARD_STATUS.BOMB;
+    bombs.push([x, y]);
   }
 
   for (const [x, y] of bombs) {
@@ -57,16 +75,16 @@ export const createBoardWithBombs = ({
       const ny = y + dir[k][1];
 
       if (nx < 0 || ny < 0 || nx >= height || ny >= width) continue;
-      if (board[nx][ny] === -1) continue;
+      if (newBoard[nx][ny] === -1) continue;
 
-      board[nx][ny] += 1;
+      newBoard[nx][ny] += 1;
     }
   }
 
-  return board;
+  return newBoard;
 };
 
-export const openBoard = ({
+export const initOpen = ({
   board,
   boardStatus,
   x: i,
@@ -94,86 +112,13 @@ export const openBoard = ({
       const ny = y + dir[k][1];
 
       if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
-      if (result[nx][ny] === BOARD_STATUS.OPEN || board[nx][ny] === -1) continue;
+      if (result[nx][ny] === BOARD_STATUS.OPEN || result[nx][ny] === BOARD_STATUS.FLAG) continue;
+      if (board[nx][ny] === -1) continue;
 
       result[nx][ny] = BOARD_STATUS.OPEN;
 
       if (board[nx][ny] === 0) {
         queue.push([nx, ny]);
-      }
-    }
-  }
-
-  return result;
-};
-
-export const showBombs = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
-  const N = board.length;
-  const M = board[0].length;
-  const result = [...boardStatus.map((row) => [...row])];
-
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < M; j++) {
-      if (board[i][j] === BOARD_STATUS.BOMB && result[i][j] !== BOARD_STATUS.FLAG) {
-        result[i][j] = BOARD_STATUS.OPEN;
-      }
-
-      if (board[i][j] !== BOARD_STATUS.BOMB && result[i][j] === BOARD_STATUS.FLAG) {
-        result[i][j] = BOARD_STATUS.NOTBOMB;
-      }
-    }
-  }
-
-  return result;
-};
-
-export const checkWin = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
-  const N = board.length;
-  const M = board[0].length;
-  let flag = true;
-
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < M; j++) {
-      const status = boardStatus[i][j];
-
-      if (board[i][j] === BOARD_STATUS.BOMB && !(status === BOARD_STATUS.FLAG)) {
-        flag = false;
-      }
-    }
-
-    if (!flag) break;
-  }
-
-  if (flag) return true;
-
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < M; j++) {
-      const status = boardStatus[i][j];
-
-      if (board[i][j] !== BOARD_STATUS.BOMB && !(status === BOARD_STATUS.OPEN)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-};
-
-export const showAllBoard = ({ board, boardStatus }: { board: number[][]; boardStatus: number[][] }) => {
-  const N = board.length;
-  const M = board[0].length;
-  const result = [...boardStatus.map((row) => [...row])];
-
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < M; j++) {
-      const status = boardStatus[i][j];
-
-      if (board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
-        result[i][j] = BOARD_STATUS.RED;
-      }
-
-      if (board[i][j] !== BOARD_STATUS.BOMB && status === BOARD_STATUS.FLAG) {
-        result[i][j] = BOARD_STATUS.NOTBOMB;
       }
     }
   }

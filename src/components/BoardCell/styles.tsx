@@ -45,4 +45,10 @@ export const Cell = styled.div<{ $show: boolean; $count: number; $status: number
     css`
       background-color: red;
     `}
+
+  ${(props) =>
+    props.$status === BOARD_STATUS.BLUE &&
+    css`
+      background-color: blue;
+    `}
 `;

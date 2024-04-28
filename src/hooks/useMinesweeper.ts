@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BOARD_STATUS } from '../lib/constants';
-import { checkWin, createBoardWithBombs, openBoard, showAllBoard, showBombs } from '../lib/func';
+
+import { BOARD_STATUS, NEIGHBORS } from '../lib/constants';
+import { createBoardWithBombs, initOpen } from '../lib/func';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { selectGameStatus, selectIsDirty, updateGameStatus, updateIsDirty } from '../redux/slice/gameSlice';
 import {
+  openCell,
   selectBoard,
   selectBoardSize,
   selectBoardStatus,
   selectBombCount,
+  toggleFlag,
+  toggleShowingHints,
   updateBoard,
   updateBoardStatus,
   updateSize,
@@ -21,86 +25,207 @@ export function useMinesweeper() {
   const bombCount = useAppSelector(selectBombCount);
   const { height, width } = useAppSelector(selectBoardSize);
   const [count, setCount] = useState(0);
+  const [isCounterClick, setIsCounterClick] = useState(false);
   const dispatch = useAppDispatch();
+
+  // 초기 클릭
+  const init = (x: number, y: number) => {
+    const initBoard = createBoardWithBombs({ board, bombCount, x, y });
+    const initBoardStatus = initOpen({ board: initBoard, boardStatus, x, y });
+
+    dispatch(updateIsDirty(true));
+    dispatch(updateBoard(initBoard));
+    dispatch(updateBoardStatus(initBoardStatus));
+  };
+
+  const toggleFlagMark = (x: number, y: number) => {
+    dispatch(toggleFlag([x, y]));
+
+    setCount(boardStatus[x][y] === BOARD_STATUS.FLAG ? count + 1 : count - 1);
+  };
+
+  // 게임종료 여부 확인
+  const checkIsOver = useCallback(() => {
+    /*
+    = 승리 =
+    1. 폭탄을 제외한 모든 셀을 열었을 때
+    2. 폭탄에 해당하는 모든 셀에 깃발을 표시하고 카운터를 눌렀을 때
+    
+    = 패배 =
+    1. 폭탄을 눌렀을 때
+    2. 폭탄이 아닌 곳에 깃발을 표시하고 카운터를 눌렀을 때
+  */
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const status = boardStatus[i][j];
+
+        if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.OPEN) {
+          dispatch(updateGameStatus('LOSE'));
+          return 'LOSE';
+        }
+        if (isCounterClick && board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
+          dispatch(updateGameStatus('LOSE'));
+          return 'LOSE';
+        }
+      }
+    }
+
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const status = boardStatus[i][j];
+
+        if (!isCounterClick && board[i][j] !== BOARD_STATUS.BOMB && status !== BOARD_STATUS.OPEN) {
+          return '';
+        }
+      }
+    }
+
+    dispatch(updateGameStatus('WIN'));
+    return 'WIN';
+  }, [board, boardStatus, width, height, isCounterClick, dispatch]);
+
+  // 게임판 공개
+  const showBoard = useCallback(
+    (result: string) => {
+      /*
+      = 카운터 클릭 X =
+      0. 폭탄 O 오픈 O -> Red
+      1. 폭탄 O 오픈 X -> Open
+      2. 폭탄 O 깃발 O -> Flag
+      3. 폭탄 X 깃발 O -> Not
+
+      = 카운터 클릭 O =
+      0. 폭탄 X 깃발 X -> 유지
+      1. 폭탄 X 깃발 O -> Not
+      2. 폭탄 O 깃발 O -> Flag
+      3. 폭탄 O 깃발 X -> Red
+    */
+
+      const newBoardStatus = [...boardStatus.map((row) => [...row])];
+
+      for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+          const status = boardStatus[i][j];
+
+          if (!isCounterClick) {
+            if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.OPEN) {
+              newBoardStatus[i][j] = BOARD_STATUS.RED;
+            } else if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.CLOSE && result === 'LOSE') {
+              newBoardStatus[i][j] = BOARD_STATUS.OPEN;
+            } else if (board[i][j] !== BOARD_STATUS.BOMB && status === BOARD_STATUS.FLAG) {
+              newBoardStatus[i][j] = BOARD_STATUS.NOTBOMB;
+            }
+          } else {
+            if (board[i][j] !== BOARD_STATUS.BOMB && status === BOARD_STATUS.FLAG) {
+              newBoardStatus[i][j] = BOARD_STATUS.NOTBOMB;
+            } else if (board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
+              newBoardStatus[i][j] = BOARD_STATUS.RED;
+            }
+          }
+        }
+      }
+
+      dispatch(updateBoardStatus(newBoardStatus));
+    },
+    [board, boardStatus, width, height, isCounterClick, dispatch],
+  );
+
+  const reset = useCallback(() => {
+    dispatch(updateGameStatus('READY'));
+    dispatch(updateIsDirty(false));
+    dispatch(updateSize({ width, height, bombCount }));
+
+    setCount(bombCount);
+    setIsCounterClick(false);
+  }, [width, height, bombCount, dispatch]);
+
+  // Area Open
+  const areaOpen = (x: number, y: number) => {
+    const openedCells: [number, number][] = [];
+    let isBombAround = false;
+
+    NEIGHBORS.forEach(([wx, wy]) => {
+      const nx = x + wx;
+      const ny = y + wy;
+
+      if (nx < 0 || ny < 0 || nx >= height || ny >= width) return;
+
+      const status = boardStatus[nx][ny];
+
+      if (status !== BOARD_STATUS.FLAG && status !== BOARD_STATUS.OPEN) {
+        openedCells.push([nx, ny]);
+
+        if (board[nx][ny] === BOARD_STATUS.BOMB) {
+          isBombAround = true;
+        }
+      }
+    });
+
+    if (isBombAround) {
+      dispatch(toggleShowingHints(openedCells));
+      setTimeout(() => {
+        dispatch(toggleShowingHints(openedCells));
+      }, 100);
+
+      return;
+    }
+
+    dispatch(openCell([x, y]));
+  };
 
   useEffect(() => {
     setCount(bombCount);
   }, [bombCount]);
 
+  useEffect(() => {
+    if (gameStatus === 'START') {
+      const result = checkIsOver();
+
+      if (result) {
+        console.log('over');
+        showBoard(result);
+      }
+    }
+  }, [gameStatus, checkIsOver, showBoard]);
+
   const handleClickCell = (x: number, y: number) => {
+    if (boardStatus[x][y] === BOARD_STATUS.OPEN) {
+      // TODO: 양쪽 클릭으로 바꾸자
+      areaOpen(x, y);
+      return;
+    }
+
     if (boardStatus[x][y] === BOARD_STATUS.FLAG || boardStatus[x][y] === BOARD_STATUS.OPEN) return;
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
     if (gameStatus === 'READY') dispatch(updateGameStatus('START'));
 
     if (!isDirty) {
-      const newBoard = createBoardWithBombs({ width, height, bombCount, x, y });
-      const newBoardStatus = openBoard({ board: newBoard, boardStatus, x, y });
-
-      dispatch(updateIsDirty(true));
-      dispatch(updateBoard(newBoard));
-      dispatch(updateBoardStatus(newBoardStatus));
+      init(x, y);
 
       return;
     }
 
-    if (board[x][y] === BOARD_STATUS.BOMB) {
-      const newBoardStatus = showBombs({ board, boardStatus });
-      newBoardStatus[x][y] = BOARD_STATUS.RED;
-
-      dispatch(updateIsDirty(false));
-      dispatch(updateGameStatus('LOSE'));
-      dispatch(updateBoardStatus(newBoardStatus));
-
-      return;
-    }
-
-    const newBoardStatus = openBoard({ board, boardStatus, x, y });
-    const isWin = checkWin({ board, boardStatus: newBoardStatus });
-
-    dispatch(updateBoardStatus(newBoardStatus));
-
-    if (isWin) {
-      dispatch(updateGameStatus('WIN'));
-    }
+    dispatch(openCell([x, y]));
   };
 
   const handleToggleFlag = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
     e.preventDefault();
+
     if (boardStatus[x][y] === BOARD_STATUS.OPEN) return;
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
     if (gameStatus === 'READY') dispatch(updateGameStatus('START'));
 
-    const newBoardStatus = [...boardStatus.map((row) => [...row])];
-
-    if (newBoardStatus[x][y] === BOARD_STATUS.FLAG) {
-      newBoardStatus[x][y] = BOARD_STATUS.CLOSE;
-      setCount(count + 1);
-    } else {
-      newBoardStatus[x][y] = BOARD_STATUS.FLAG;
-      setCount(count - 1);
-    }
-
-    dispatch(updateBoardStatus(newBoardStatus));
+    toggleFlagMark(x, y);
   };
 
   const handleReset = useCallback(() => {
-    dispatch(updateSize({ width, height, bombCount }));
-    dispatch(updateIsDirty(false));
-    dispatch(updateGameStatus('READY'));
-    setCount(bombCount);
-  }, [width, height, bombCount, dispatch]);
+    reset();
+  }, [reset]);
 
   const handleClickCounter = () => {
     if (count !== 0) return;
 
-    const newBoardStatus = showAllBoard({ board, boardStatus });
-    const isWin = checkWin({ board, boardStatus });
-
-    dispatch(updateBoardStatus(newBoardStatus));
-
-    if (isWin) {
-      dispatch(updateGameStatus('WIN'));
-    }
+    setIsCounterClick(true);
   };
 
   return {

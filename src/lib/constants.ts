@@ -11,4 +11,16 @@ export const BOARD_STATUS = {
   FLAG: 2,
   RED: 3,
   NOTBOMB: 4,
+  BLUE: 5,
 };
+
+export const NEIGHBORS = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-1, -1],
+  [-1, 1],
+  [1, -1],
+  [1, 1],
+];

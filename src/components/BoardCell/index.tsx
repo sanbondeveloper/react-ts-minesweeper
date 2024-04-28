@@ -11,13 +11,14 @@ interface Props {
 }
 
 const BoardCell = React.memo(function BoardCell({ status, value }: Props) {
-  const show = status !== BOARD_STATUS.CLOSE && status !== BOARD_STATUS.FLAG;
+  const show = status !== BOARD_STATUS.CLOSE && status !== BOARD_STATUS.FLAG && status !== BOARD_STATUS.BLUE;
 
   return (
     <Cell $show={show} $count={value} $status={status}>
       {(() => {
         if (status === BOARD_STATUS.FLAG) return <IoIosFlag />;
-        if (!show) return '';
+
+        // if (!show) return '';
 
         if (value === BOARD_STATUS.BOMB || status === BOARD_STATUS.NOTBOMB)
           return (
@@ -26,8 +27,10 @@ const BoardCell = React.memo(function BoardCell({ status, value }: Props) {
               <BiSolidBomb />
             </>
           );
-        else if (value === 0) return '';
-        else return value;
+
+        if (value === 0) return '';
+
+        return value;
       })()}
     </Cell>
   );
