@@ -18,7 +18,7 @@ const BoardCell = React.memo(function BoardCell({ status, value }: Props) {
       {(() => {
         if (status === BOARD_STATUS.FLAG) return <IoIosFlag />;
 
-        if (!show) return '';
+        // if (!show) return '';
 
         if (value === BOARD_STATUS.BOMB || status === BOARD_STATUS.NOTBOMB)
           return (

@@ -2,10 +2,9 @@ import { useRef } from 'react';
 import Modal from 'react-modal';
 
 import { TitleWrapper, InputWrapper, ButtonWrapper } from './styles';
+import { useInit } from '../../hooks/useInit';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { selectModalIsOpen, updateModal } from '../../redux/slice/modalSlice';
-import { updateSize } from '../../redux/slice/mapSlice';
-import { updateLevel } from '../../redux/slice/gameSlice';
 
 const customStyles = {
   content: {
@@ -24,6 +23,7 @@ Modal.setAppElement('#root');
 function CustomSetupModal() {
   const isOpen = useAppSelector(selectModalIsOpen);
   const dispatch = useAppDispatch();
+  const setting = useInit();
   const inputHeight = useRef<HTMLInputElement>(null);
   const inputWidth = useRef<HTMLInputElement>(null);
   const inputBombs = useRef<HTMLInputElement>(null);
@@ -45,8 +45,7 @@ function CustomSetupModal() {
       return;
     }
 
-    dispatch(updateSize({ width: w, height: h, bombCount: cnt }));
-    dispatch(updateLevel('Custom'));
+    setting({ level: 'Custom', width: w, height: h, bombCount: cnt });
     dispatch(updateModal(false));
 
     localStorage.setItem('level', JSON.stringify({ level: 'Custom', width: w, height: h, bombCount: cnt }));
