@@ -21,6 +21,8 @@ export function useInit() {
     dispatch(updateSize({ width, height, bombCount }));
     dispatch(updateIsDirty(false));
     dispatch(updateGameStatus('READY'));
+
+    localStorage.setItem('level', JSON.stringify({ level, width, height, bombCount }));
   };
 
   return setting;

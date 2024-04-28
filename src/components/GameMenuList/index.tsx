@@ -28,8 +28,6 @@ function GameMenuList({ isOpen }: Props) {
     const [height, width, bombCount] = LEVEL_SIZE[newLevel];
 
     setting({ level: newLevel, width, height, bombCount });
-
-    localStorage.setItem('level', JSON.stringify({ level: newLevel, width, height, bombCount }));
   };
 
   return (
