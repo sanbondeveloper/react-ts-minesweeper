@@ -55,15 +55,6 @@ export function useMinesweeper() {
 
   // 게임종료 여부 확인
   const checkIsOver = useCallback(() => {
-    /*
-    = 승리 =
-    1. 폭탄을 제외한 모든 셀을 열었을 때
-    2. 폭탄에 해당하는 모든 셀에 깃발을 표시하고 카운터를 눌렀을 때
-    
-    = 패배 =
-    1. 폭탄을 눌렀을 때
-    2. 폭탄이 아닌 곳에 깃발을 표시하고 카운터를 눌렀을 때
-  */
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
         const status = boardStatus[i][j];
@@ -96,20 +87,6 @@ export function useMinesweeper() {
   // 게임판 공개
   const showBoard = useCallback(
     (result: string) => {
-      /*
-      = 카운터 클릭 X =
-      0. 폭탄 O 오픈 O -> Red
-      1. 폭탄 O 오픈 X -> Open
-      2. 폭탄 O 깃발 O -> Flag
-      3. 폭탄 X 깃발 O -> Not
-
-      = 카운터 클릭 O =
-      0. 폭탄 X 깃발 X -> 유지
-      1. 폭탄 X 깃발 O -> Not
-      2. 폭탄 O 깃발 O -> Flag
-      3. 폭탄 O 깃발 X -> Red
-    */
-
       const newBoardStatus = [...boardStatus.map((row) => [...row])];
 
       for (let i = 0; i < height; i++) {
