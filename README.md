@@ -2,8 +2,8 @@
 
 ## 과제 설치 및 실행 방법
 
-- node 버전: 18.17.1
-- npm 버전: 9.6.7
+- node: v18.17.1
+- npm: v9.6.7
 
 ```
 npm install
@@ -13,7 +13,7 @@ npm run preview
 
 ## 추가 구현사항
 
-### 1. 양쪽 클릭 기능 (Area Open)
+### 양쪽 클릭 기능 (Area Open)
 
 > 맥북의 트랙패드 사용 중이라 양쪽 클릭이 안되서 셀(cell)이 오픈된 상태에서 마우스 왼쪽 클릭을 했을 때도 해당 기능이 동작하게 구현했습니다.
 
@@ -58,25 +58,62 @@ const areaOpen = (x: number, y: number) => {
 };
 ```
 
-### 2. 렌더링 최적화
+```tsx
+export const mapSlice = createSlice({
+  name: 'map',
+  initialState,
+  reducers: {
+    ...
+    openCell: (state, action: PayloadAction<[number, number]>) => {
+      const [tx, ty] = action.payload;
+      const N = state.board.length;
+      const M = state.board[0].length;
+      const newBoardStatus = [...state.boardStatus.map((row) => [...row])];
+      const queue = [[tx, ty]];
 
-1. 루트 컴포넌트 App에서 상태 사용 안함
+      newBoardStatus[tx][ty] = BOARD_STATUS.OPEN;
 
-App 컴포넌트가 리렌더링되면 기본적으로 모든 컴포넌트가 리렌더링되기 때문에 App 컴포넌트가 리렌더링되는 것을 방지하기 위해 자식 컴포넌트의 리렌더링에 영향을 주는 상태(변화가 자주 일어나는 상태 등)를 사용하지 않았습니다.
+      if (state.boardStatus[tx][ty] === BOARD_STATUS.CLOSE && state.board[tx][ty] !== 0) {
+        state.boardStatus = newBoardStatus;
 
-2. React.memo 사용
+        return;
+      }
 
-메모이제이션에도 비용이 따르기 때문에 전달받은 Props가 변경되지 않았는데 리렌더링될 가능성이 있는 컴포넌트들만 React.memo를 사용해 메모이제이션 했습니다.
+      while (queue.length > 0) {
+        const [x, y] = queue.shift()!;
 
-3. 시간 복잡도 최소화
+        NEIGHBORS.forEach(([wx, wy]) => {
+          const nx = x + wx;
+          const ny = y + wy;
 
-높이와 너비가 최대 100으로 모수가 프로그램 성능에 영향을 줄 만큼 크지는 않지만 모든 연산에서 시간복잡도가 `O(N^2)`을 넘지 않도록 구현했습니다.
+          if (nx < 0 || ny < 0 || nx >= N || ny >= M) return;
+          if (newBoardStatus[nx][ny] === BOARD_STATUS.OPEN || newBoardStatus[nx][ny] === BOARD_STATUS.FLAG) return;
+          if (state.board[nx][ny] === BOARD_STATUS.BOMB) return;
 
-4. Web Worker를 사용한 타이머 구현
+          newBoardStatus[nx][ny] = BOARD_STATUS.OPEN;
 
-타이머 기능을 메인 스레드가 아닌 별도의 분리된 스레드에서 처리하여 메인 스레드의 성능에 영향을 주지 않도록 했습니다.
+          if (state.board[nx][ny] === 0) {
+            queue.push([nx, ny]);
+          }
+        });
+      }
 
-### 3. 난이도 데이터 저장 (브라우저 새로고침 시 유지)
+      state.boardStatus = newBoardStatus;
+    },
+    ...
+  },
+});
+```
+
+### 렌더링 최적화
+
+- **React.memo 사용** : 전달받은 Props가 변경되지 않았는데 리렌더링될 가능성이 있는 컴포넌트에 React.memo를 적용해 메모이제이션 했습니다.
+
+- **시간 복잡도 최소화**: 높이와 너비가 최대 100으로 모수가 프로그램 성능에 영향을 줄 만큼 크지는 않지만 모든 연산에서 시간복잡도가 `O(N^2)`을 넘지 않도록 구현했습니다.
+
+- **Web Worker를 사용한 타이머 구현** : 타이머 기능을 메인 스레드가 아닌 별도의 분리된 스레드에서 처리하여 메인 스레드의 성능에 영향을 주지 않도록 했습니다.
+
+### 난이도 데이터 저장 (브라우저 새로고침 시 유지)
 
 브라우저 새로고침 시에도 난이도 데이터를 유지하기 위해 로컬스토리지에 난이도, 너비, 높이, 지뢰 개수를 저장했습니다.
 
@@ -105,50 +142,5 @@ export function useLevelDataFromLocalStorage() {
   }, [dispatch]);
 
   ...
-}
-```
-
-### 4. 로컬스토리지에서 난이도 데이터를 가져오기 전까지 렌더링 늦추기
-
-로컬스토리지에서 난이도 데이터를 가져와 리덕스 스토어에 저장하기 위해 액션을 디스패치하는 작업을 `useEffect`에서 하고 있습니다.
-
-`useEffect`는 렌더링 작업 이후에 실행되기 때문에 게임 보드판이 깜빡이는 현상이 발생합니다.
-이를 방지하기 위해 `load`라는 상태를 사용해 난이도 데이터가 리덕스 스토어에 저장되기 전까지 렌더링을 늦췄습니다.
-
-```tsx
-export function useLevelDataFromLocalStorage() {
-  const [load, setLoad] = useState(false);
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    const levelData = localStorage.getItem('level');
-
-    if (levelData) {
-      const { level, width, height, bombCount } = JSON.parse(levelData);
-
-      dispatch(updateLevel(level));
-      dispatch(updateSize({ width, height, bombCount }));
-    }
-
-    setLoad(true);
-  }, [dispatch]);
-
-  return load;
-}
-
-function App() {
-  const load = useLevelDataFromLocalStorage();
-
-  if (!load) return null;
-
-  return (
-    <Container>
-      <Wrapper>
-        <Menu />
-        <Board />
-      </Wrapper>
-      <CustomSetupModal />
-    </Container>
-  );
 }
 ```
