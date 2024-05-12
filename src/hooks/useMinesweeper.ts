@@ -18,17 +18,17 @@ import {
 } from '../redux/slice/mapSlice';
 
 export function useMinesweeper() {
+  const [count, setCount] = useState(0);
+  const [isCounterClick, setIsCounterClick] = useState(false);
+  const [clickedLeft, setClickedLeft] = useState(false);
+  const [clickedRight, setClickedRight] = useState(false);
+  const dispatch = useAppDispatch();
   const gameStatus = useAppSelector(selectGameStatus);
   const isDirty = useAppSelector(selectIsDirty);
   const board = useAppSelector(selectBoard);
   const boardStatus = useAppSelector(selectBoardStatus);
   const bombCount = useAppSelector(selectBombCount);
   const { height, width } = useAppSelector(selectBoardSize);
-  const [count, setCount] = useState(0);
-  const [isCounterClick, setIsCounterClick] = useState(false);
-  const [clickedLeft, setClickedLeft] = useState(false);
-  const [clickedRight, setClickedRight] = useState(false);
-  const dispatch = useAppDispatch();
 
   // 초기 클릭
   const init = (x: number, y: number) => {
@@ -55,40 +55,9 @@ export function useMinesweeper() {
     setCount(boardStatus[x][y] === BOARD_STATUS.FLAG ? count + 1 : count - 1);
   };
 
-  // 게임종료 여부 확인
-  const checkIsOver = useCallback(() => {
-    for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
-        const status = boardStatus[i][j];
-
-        if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.OPEN) {
-          dispatch(updateGameStatus('LOSE'));
-          return 'LOSE';
-        }
-        if (isCounterClick && board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
-          dispatch(updateGameStatus('LOSE'));
-          return 'LOSE';
-        }
-      }
-    }
-
-    for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
-        const status = boardStatus[i][j];
-
-        if (!isCounterClick && board[i][j] !== BOARD_STATUS.BOMB && status !== BOARD_STATUS.OPEN) {
-          return '';
-        }
-      }
-    }
-
-    dispatch(updateGameStatus('WIN'));
-    return 'WIN';
-  }, [board, boardStatus, width, height, isCounterClick, dispatch]);
-
   // 게임판 공개
   const showBoard = useCallback(
-    (result: string) => {
+    (isLose: boolean) => {
       const newBoardStatus = [...boardStatus.map((row) => [...row])];
 
       for (let i = 0; i < height; i++) {
@@ -98,7 +67,7 @@ export function useMinesweeper() {
           if (!isCounterClick) {
             if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.OPEN) {
               newBoardStatus[i][j] = BOARD_STATUS.RED;
-            } else if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.CLOSE && result === 'LOSE') {
+            } else if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.CLOSE && isLose) {
               newBoardStatus[i][j] = BOARD_STATUS.OPEN;
             } else if (board[i][j] !== BOARD_STATUS.BOMB && status === BOARD_STATUS.FLAG) {
               newBoardStatus[i][j] = BOARD_STATUS.NOTBOMB;
@@ -118,6 +87,45 @@ export function useMinesweeper() {
     [board, boardStatus, width, height, isCounterClick, dispatch],
   );
 
+  const isLose = useCallback(() => {
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const status = boardStatus[i][j];
+
+        if (board[i][j] === BOARD_STATUS.BOMB && status === BOARD_STATUS.OPEN) {
+          // dispatch(updateGameStatus('LOSE'));
+          return true;
+        }
+        if (isCounterClick && board[i][j] === BOARD_STATUS.BOMB && status !== BOARD_STATUS.FLAG) {
+          // dispatch(updateGameStatus('LOSE'));
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }, [height, width, board, boardStatus, isCounterClick]);
+
+  // 게임종료 여부 확인
+  const checkGameOver = useCallback(() => {
+    if (isLose()) {
+      dispatch(updateGameStatus('LOSE'));
+      showBoard(true);
+
+      return;
+    }
+
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        const status = boardStatus[i][j];
+        if (!isCounterClick && board[i][j] !== BOARD_STATUS.BOMB && status !== BOARD_STATUS.OPEN) return;
+      }
+    }
+
+    dispatch(updateGameStatus('WIN'));
+    showBoard(false);
+  }, [board, boardStatus, width, height, isCounterClick, isLose, showBoard, dispatch]);
+
   // 게임 초기화
   const reset = useCallback(() => {
     dispatch(updateIsDirty(false));
@@ -127,6 +135,7 @@ export function useMinesweeper() {
     setIsCounterClick(false);
   }, [width, height, bombCount, dispatch]);
 
+  // Area Open
   const areaOpen = (x: number, y: number) => {
     const avaliableCells: [number, number][] = [];
     let isBombAround = false;
@@ -166,13 +175,9 @@ export function useMinesweeper() {
 
   useEffect(() => {
     if (gameStatus === 'START') {
-      const result = checkIsOver();
-
-      if (result) {
-        showBoard(result);
-      }
+      checkGameOver();
     }
-  }, [gameStatus, checkIsOver, showBoard]);
+  }, [gameStatus, checkGameOver]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button === 0) {
@@ -202,12 +207,8 @@ export function useMinesweeper() {
       return;
     }
 
-    if (!isDirty) {
-      init(x, y);
-      return;
-    }
-
-    dispatch(openCell([x, y]));
+    if (!isDirty) init(x, y);
+    else dispatch(openCell([x, y]));
   };
 
   const handleClickRight = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {

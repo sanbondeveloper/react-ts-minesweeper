@@ -34,9 +34,9 @@ export function createBoardWithBombs({
   x: number;
   y: number;
 }) {
-  const height = board.length;
-  const width = board[0].length;
-  const newBoard = [...board.map((row) => [...row])];
+  const N = board.length;
+  const M = board[0].length;
+  const result = [...board.map((row) => [...row])];
   const bombs: [number, number][] = [];
   const exclude = [[x, y]];
 
@@ -44,33 +44,33 @@ export function createBoardWithBombs({
     const nx = x + wx;
     const ny = y + wy;
 
-    if (nx < 0 || ny < 0 || nx >= height || ny >= width) return;
+    if (nx < 0 || ny < 0 || nx >= N || ny >= M) return;
 
     exclude.push([nx, ny]);
   });
 
-  const randomCoordinates = generateRandomCoordinates(height, width, exclude);
+  const randomCoordinates = generateRandomCoordinates(N, M, exclude);
 
   for (let i = 0; i < bombCount; i++) {
     const [x, y] = randomCoordinates[i];
 
-    newBoard[x][y] = BOARD_STATUS.BOMB;
+    result[x][y] = BOARD_STATUS.BOMB;
     bombs.push([x, y]);
   }
 
   for (const [x, y] of bombs) {
-    for (let k = 0; k < 8; k++) {
-      const nx = x + NEIGHBORS[k][0];
-      const ny = y + NEIGHBORS[k][1];
+    NEIGHBORS.forEach(([wx, wy]) => {
+      const nx = x + wx;
+      const ny = y + wy;
 
-      if (nx < 0 || ny < 0 || nx >= height || ny >= width) continue;
-      if (newBoard[nx][ny] === BOARD_STATUS.BOMB) continue;
+      if (nx < 0 || ny < 0 || nx >= N || ny >= M) return;
+      if (result[nx][ny] === BOARD_STATUS.BOMB) return;
 
-      newBoard[nx][ny] += 1;
-    }
+      result[nx][ny] += 1;
+    });
   }
 
-  return newBoard;
+  return result;
 }
 
 export function initOpen({
@@ -94,20 +94,19 @@ export function initOpen({
   while (queue.length > 0) {
     const [x, y] = queue.shift() as [x: number, y: number];
 
-    for (let k = 0; k < 8; k++) {
-      const nx = x + NEIGHBORS[k][0];
-      const ny = y + NEIGHBORS[k][1];
+    NEIGHBORS.forEach(([wx, wy]) => {
+      const nx = x + wx;
+      const ny = y + wy;
 
-      if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
-      if (result[nx][ny] === BOARD_STATUS.OPEN || result[nx][ny] === BOARD_STATUS.FLAG) continue;
-      if (board[nx][ny] === BOARD_STATUS.BOMB) continue;
+      if (nx < 0 || ny < 0 || nx >= N || ny >= M) return;
+      if (result[nx][ny] === BOARD_STATUS.OPEN || board[nx][ny] === BOARD_STATUS.BOMB) return;
 
       result[nx][ny] = BOARD_STATUS.OPEN;
 
       if (board[nx][ny] === 0) {
         queue.push([nx, ny]);
       }
-    }
+    });
   }
 
   return result;
