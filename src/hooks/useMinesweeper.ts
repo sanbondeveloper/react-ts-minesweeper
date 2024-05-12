@@ -36,20 +36,22 @@ export function useMinesweeper() {
     const initBoardStatus = initOpen({ board: initBoard, boardStatus, x, y });
 
     dispatch(updateIsDirty(true));
+    dispatch(updateGameStatus('START'));
     dispatch(updateBoard(initBoard));
     dispatch(updateBoardStatus(initBoardStatus));
   };
 
+  // 깃발 토글
   const toggleFlagMark = (x: number, y: number) => {
     if (!isDirty) {
       const initBoard = createBoardWithBombs({ board, bombCount, x, y });
 
       dispatch(updateIsDirty(true));
+      dispatch(updateGameStatus('START'));
       dispatch(updateBoard(initBoard));
     }
 
     dispatch(toggleFlag([x, y]));
-
     setCount(boardStatus[x][y] === BOARD_STATUS.FLAG ? count + 1 : count - 1);
   };
 
@@ -116,17 +118,17 @@ export function useMinesweeper() {
     [board, boardStatus, width, height, isCounterClick, dispatch],
   );
 
+  // 게임 초기화
   const reset = useCallback(() => {
-    dispatch(updateGameStatus('READY'));
     dispatch(updateIsDirty(false));
+    dispatch(updateGameStatus('READY'));
     dispatch(updateSize({ width, height, bombCount }));
-
     setCount(bombCount);
     setIsCounterClick(false);
   }, [width, height, bombCount, dispatch]);
 
   const areaOpen = (x: number, y: number) => {
-    const openedCells: [number, number][] = [];
+    const avaliableCells: [number, number][] = [];
     let isBombAround = false;
 
     NEIGHBORS.forEach(([wx, wy]) => {
@@ -138,7 +140,7 @@ export function useMinesweeper() {
       const status = boardStatus[nx][ny];
 
       if (status !== BOARD_STATUS.FLAG && status !== BOARD_STATUS.OPEN) {
-        openedCells.push([nx, ny]);
+        avaliableCells.push([nx, ny]);
 
         if (board[nx][ny] === BOARD_STATUS.BOMB) {
           isBombAround = true;
@@ -147,9 +149,9 @@ export function useMinesweeper() {
     });
 
     if (isBombAround) {
-      dispatch(toggleShowingHints(openedCells));
+      dispatch(toggleShowingHints(avaliableCells));
       setTimeout(() => {
-        dispatch(toggleShowingHints(openedCells));
+        dispatch(toggleShowingHints(avaliableCells));
       }, 100);
 
       return;
@@ -167,7 +169,6 @@ export function useMinesweeper() {
       const result = checkIsOver();
 
       if (result) {
-        console.log('over');
         showBoard(result);
       }
     }
@@ -191,23 +192,18 @@ export function useMinesweeper() {
 
   const handleClick = (x: number, y: number) => {
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
-
-    if (clickedLeft && clickedRight && boardStatus[x][y] === BOARD_STATUS.OPEN) {
-      areaOpen(x, y);
-      return;
-    }
-
-    if (boardStatus[x][y] === BOARD_STATUS.OPEN) {
-      areaOpen(x, y);
-      return;
-    }
-
     if (boardStatus[x][y] === BOARD_STATUS.FLAG) return;
-    if (gameStatus === 'READY') dispatch(updateGameStatus('START'));
+
+    if (
+      boardStatus[x][y] === BOARD_STATUS.OPEN ||
+      (clickedLeft && clickedRight && boardStatus[x][y] === BOARD_STATUS.OPEN)
+    ) {
+      areaOpen(x, y);
+      return;
+    }
 
     if (!isDirty) {
       init(x, y);
-
       return;
     }
 
@@ -217,9 +213,8 @@ export function useMinesweeper() {
   const handleClickRight = (e: React.MouseEvent<HTMLDivElement>, x: number, y: number) => {
     e.preventDefault();
 
-    if (boardStatus[x][y] === BOARD_STATUS.OPEN) return;
     if (gameStatus === 'WIN' || gameStatus === 'LOSE') return;
-    if (gameStatus === 'READY') dispatch(updateGameStatus('START'));
+    if (boardStatus[x][y] === BOARD_STATUS.OPEN) return;
 
     toggleFlagMark(x, y);
   };

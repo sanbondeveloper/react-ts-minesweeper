@@ -64,7 +64,7 @@ export function createBoardWithBombs({
       const ny = y + NEIGHBORS[k][1];
 
       if (nx < 0 || ny < 0 || nx >= height || ny >= width) continue;
-      if (newBoard[nx][ny] === -1) continue;
+      if (newBoard[nx][ny] === BOARD_STATUS.BOMB) continue;
 
       newBoard[nx][ny] += 1;
     }
@@ -91,8 +91,6 @@ export function initOpen({
 
   result[i][j] = BOARD_STATUS.OPEN;
 
-  if (board[i][j] !== 0) return result;
-
   while (queue.length > 0) {
     const [x, y] = queue.shift() as [x: number, y: number];
 
@@ -102,7 +100,7 @@ export function initOpen({
 
       if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
       if (result[nx][ny] === BOARD_STATUS.OPEN || result[nx][ny] === BOARD_STATUS.FLAG) continue;
-      if (board[nx][ny] === -1) continue;
+      if (board[nx][ny] === BOARD_STATUS.BOMB) continue;
 
       result[nx][ny] = BOARD_STATUS.OPEN;
 
