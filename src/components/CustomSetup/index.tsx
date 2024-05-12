@@ -1,32 +1,20 @@
-import { useRef } from 'react';
-import Modal from 'react-modal';
+import React, { useRef } from 'react';
 
-import { TitleWrapper, InputWrapper, ButtonWrapper } from './styles';
+import { ButtonWrapper, InputWrapper, TitleWrapper } from './styles';
+import { useAppDispatch } from '../../redux/hooks';
 import { useInit } from '../../hooks/useInit';
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { selectModalIsOpen, updateModal } from '../../redux/slice/modalSlice';
+import { updateModal } from '../../redux/slice/modalSlice';
 
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-    opacipy: '0.1',
-  },
-};
+interface Props {
+  onClose: () => void;
+}
 
-Modal.setAppElement('#root');
-
-function CustomSetupModal() {
-  const isOpen = useAppSelector(selectModalIsOpen);
-  const dispatch = useAppDispatch();
-  const setting = useInit();
+const CustomSetup = React.memo(function CustomSetup({ onClose }: Props) {
   const inputHeight = useRef<HTMLInputElement>(null);
   const inputWidth = useRef<HTMLInputElement>(null);
   const inputBombs = useRef<HTMLInputElement>(null);
+  const dispatch = useAppDispatch();
+  const setting = useInit();
 
   const handleOk = () => {
     const h = Number(inputHeight.current?.value || 0);
@@ -49,15 +37,11 @@ function CustomSetupModal() {
     dispatch(updateModal(false));
   };
 
-  const handleClose = () => {
-    dispatch(updateModal(false));
-  };
-
   return (
-    <Modal style={customStyles} isOpen={isOpen} onRequestClose={handleClose}>
+    <>
       <TitleWrapper>
         <h1>Custom Game Setup</h1>
-        <button onClick={handleClose}>CLOSE</button>
+        <button onClick={onClose}>CLOSE</button>
       </TitleWrapper>
 
       <InputWrapper>
@@ -76,8 +60,8 @@ function CustomSetupModal() {
       <ButtonWrapper>
         <button onClick={handleOk}>ok</button>
       </ButtonWrapper>
-    </Modal>
+    </>
   );
-}
+});
 
-export default CustomSetupModal;
+export default CustomSetup;

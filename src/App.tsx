@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useLevelDataFromLocalStorage } from './hooks/useLevelDataFromLocalStorage';
 import Menu from './components/Menu';
 import Board from './components/Board';
-import CustomSetupModal from './components/CustomSetupModal';
+import CommonModal from './components/CommonModal';
 
 function App() {
   const load = useLevelDataFromLocalStorage();
@@ -16,7 +16,7 @@ function App() {
         <Menu />
         <Board />
       </Wrapper>
-      <CustomSetupModal />
+      <CommonModal />
     </Container>
   );
 }
