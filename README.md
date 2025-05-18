@@ -1,5 +1,3 @@
-# classum-박경민-minesweeper
-
 ## 과제 설치 및 실행 방법
 
 - node: v18.17.1
