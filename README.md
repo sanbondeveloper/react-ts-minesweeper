@@ -7,7 +7,6 @@
 - [기술 스택](#기술-스택)
 
 ## 프로젝트 소개
-
 추억의 지뢰찾기 게임
 
 - 개인 프로젝트
@@ -15,6 +14,8 @@
 - 배포 주소: https://harmonious-taiyaki-c3efc2.netlify.app/
 
 ### 주요 기능
+
+![May-18-2025 19-57-49](https://github.com/user-attachments/assets/42283347-9e48-42b3-8c62-ab42da67573c)
 
 **지뢰 배치**
 
